@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+
+{% block body %}
+
+<form method="POST" action="/displayevents">
+    <label for="swimmer">Choose an event:</label>
+
+    <select name="events" id="events">
+
+        {% for events in data %}
+
+        <option value="{{events}}">{{ events }}</option>
+
+        {% endfor %}
+
+    </select>
+    <p>
+        <input type="submit" value="Select">
+    </p>
+</form>
+
+{% endblock %}
