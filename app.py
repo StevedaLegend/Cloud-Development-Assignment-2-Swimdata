@@ -34,13 +34,14 @@ def display_events():
             if file.startswith(selected_swimmer) and file.endswith(".txt")
         ]
 
+        txtremove = [event.removesuffix(".txt") for event in events]
+
         return render_template(
             "events.html",
             title="Select an event to chart",
-            data=sorted(events),
+            data=sorted(txtremove),
+            selected_swimmer=selected_swimmer,
         )
-
-    return render_template("events.html", title="Select an event to chart", data=[])
 
 
 @app.post("/chart")
@@ -48,6 +49,8 @@ def display_chart():
     selected_swimmer = request.form.get("event")
 
     if selected_swimmer:
+        if not selected_swimmer.endswith(".txt"):
+            selected_swimmer += ".txt"
         (
             name,
             age,
