@@ -1,44 +1,12 @@
-from flask import Flask, render_template, request  # from module import Class.
+from flask import Flask, render_template, request
 import os
 import hfpy_utils
-import swim_utils
-
+import swim_utils  # Assuming you have a swim_utils module
 
 app = Flask(__name__)
 
 
 @app.route("/")
-def index():
-    return render_template("select.html")
-
-
-@app.get("/chart")
-def display_chart():
-    (
-        name,
-        age,
-        distance,
-        stroke,
-        the_times,
-        converts,
-        the_average,
-    ) = swim_utils.get_swimmers_data("Darius-13-100m-Fly.txt")
-
-    the_title = f"{name} (Under {age}) {distance} {stroke}"
-    from_max = max(converts) + 50
-    the_converts = [hfpy_utils.convert2range(n, 0, from_max, 0, 350) for n in converts]
-
-    the_data = zip(the_converts, the_times)
-
-    return render_template(
-        "chart.html",
-        title=the_title,
-        average=the_average,
-        data=the_data,
-    )
-
-
-@app.get("/getswimmers")
 def get_swimmers_names():
     files = os.listdir(swim_utils.FOLDER)
     files.remove(".DS_Store")
@@ -52,10 +20,62 @@ def get_swimmers_names():
     )
 
 
-@app.post("/displayevents")
-def get_swimmer_events():
-    return request.form["swimmer"]
+@app.route("/displayevents", methods=["POST"])
+def display_events():
+    selected_swimmer = request.form.get("swimmer")
+
+    if selected_swimmer:
+        files = os.listdir(swim_utils.FOLDER)
+        files.remove(".DS_Store")
+
+        events = [
+            file
+            for file in files
+            if file.startswith(selected_swimmer) and file.endswith(".txt")
+        ]
+
+        return render_template(
+            "events.html",
+            title="Select an event to chart",
+            data=sorted(events),
+        )
+
+    return render_template("events.html", title="Select an event to chart", data=[])
+
+
+@app.post("/chart")
+def display_chart():
+    selected_swimmer = request.form.get("event")
+
+    if selected_swimmer:
+        (
+            name,
+            age,
+            distance,
+            stroke,
+            the_times,
+            converts,
+            the_average,
+        ) = swim_utils.get_swimmers_data(selected_swimmer)
+
+        the_title = f"{name} (Under {age}) {distance} {stroke}"
+        from_max = max(converts) + 50
+        the_converts = [
+            hfpy_utils.convert2range(n, 0, from_max, 0, 350) for n in converts
+        ]
+
+        the_converts.reverse()
+        the_times.reverse()
+
+        the_data = zip(the_converts, the_times)
+
+        return render_template(
+            "chart.html",
+            title=the_title,
+            average=the_average,
+            data=the_data,
+        )
 
 
 if __name__ == "__main__":
-    app.run(debug=True)  # Starts a local (test) webserver, and waits... forever.
+    app.run(debug=True)
