@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request, url_for
 import os
 import hfpy_utils
 import swim_utils  # Assuming you have a swim_utils module
@@ -46,21 +46,27 @@ def display_chart():
     )
 
 
+@app.route("/displayevents", methods=["GET", "POST"])
+def display_events():
+    files = os.listdir(swim_utils.FOLDER)
+    files.remove(".DS_Store")
+    swimmers_data = [swim_utils.get_swimmers_data(swimmer) for swimmer in files]
+
+    return render_template(
+        "events.html",
+        title="Select an event to chart",
+        swimmers_data=swimmers_data,
+    )
+
+
 @app.route("/events", methods=["POST"])
 def events():
     selected_swimmer = request.form["swimmer"]
     selected_event = request.form["events"]
 
-    # events = swim_utils.get_events_for_swimmer(selected_swimmer)
-
     # Do processing based on the selected swimmer and event
 
-    return render_template("events.html")
-
-
-@app.post("/displayevents")
-def get_swimmer_events():
-    return request.form["swimmer"]
+    return redirect(url_for("display_events", selected_swimmer=selected_swimmer))
 
 
 if __name__ == "__main__":
